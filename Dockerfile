@@ -23,7 +23,7 @@ RUN curl -L https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy application
 COPY server.js ./

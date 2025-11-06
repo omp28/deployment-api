@@ -2,19 +2,31 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Install required tools: docker CLI, curl, git
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install jq for JSON processing
+RUN curl -L https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64 -o /usr/local/bin/jq \
+    && chmod +x /usr/local/bin/jq
+
 # Install dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
-
+RUN npm ci --only=production
 
 # Copy application
 COPY server.js ./
-
-# Create non-root user
-RUN useradd -m -u 1001 apiuser && \
-    chown -R apiuser:apiuser /app
-
-USER apiuser
 
 EXPOSE 3002
 
